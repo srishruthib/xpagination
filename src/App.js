@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 function App() {
   const [employees, setEmployees] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
+  const [isLoading, setIsLoading] = useState(true);
   const itemsPerPage = 10;
 
   useEffect(() => {
@@ -13,33 +14,44 @@ function App() {
         }
         return response.json();
       })
-      .then(data => setEmployees(data))
+      .then(data => {
+        setEmployees(data);
+        setIsLoading(false);
+      })
       .catch(error => {
         alert('failed to fetch data');
         console.error('Error:', error);
+        setIsLoading(false);
       });
   }, []);
 
-  // Calculate total pages
-  const totalPages = Math.ceil(employees.length / itemsPerPage);
+  const totalPages = employees.length > 0 ? Math.ceil(employees.length / itemsPerPage) : 1;
 
-  // Get current page data
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
   const currentItems = employees.slice(indexOfFirstItem, indexOfLastItem);
 
-  // Handle page navigation
   const handlePrevious = () => {
-    if (currentPage > 1) {
-      setCurrentPage(currentPage - 1);
-    }
+    setCurrentPage(prevPage => {
+      if (prevPage > 1) {
+        return prevPage - 1;
+      }
+      return prevPage;
+    });
   };
 
   const handleNext = () => {
-    if (currentPage < totalPages) {
-      setCurrentPage(currentPage + 1);
-    }
+    setCurrentPage(prevPage => {
+      if (prevPage < totalPages) {
+        return prevPage + 1;
+      }
+      return prevPage;
+    });
   };
+
+  if (isLoading) {
+    return null; // Avoid rendering until data is loaded
+  }
 
   return (
     <div className="container">
